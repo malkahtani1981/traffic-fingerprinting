@@ -124,4 +124,3 @@ browser generates while rendering a page. Even when the server rotates TLS sessi
 or shifts encryption keys on every deep link, the statistical model still fingerprints the
 traffic by tracking metrics like total page weight and maximum object payload
 (`max_object_loaded`).
-</content>
