@@ -117,6 +117,7 @@ python academic_suite.py
 | `crawler_generator.py` | Playwright crawler-based session generator |
 | `run_pipeline.py` | End-to-end training + evaluation wrapper |
 | `live_inspect.py` | Live mitmproxy addon: prints each identified object (type/size/URL) in real time |
+| `live_crawl.py` | Playwright live crawl: drives a real headless browser through the proxy (browser counterpart to the curl demo) |
 
 ## Live experiment — use a VM as your browser proxy
 
@@ -155,9 +156,25 @@ active, visit **http://mitm.it**, download the cert for your OS, and install it 
 trusted authority. Without it, HTTPS sites show cert errors and you only see `CONNECT`
 metadata, not object types.
 
-**6. Browse and watch** — visit any example site (e.g. `https://example.com`). Every
-HTML, CSS, JS, image, font, and JSON object is listed live with its size as the page
-loads:
+**6. Browse and watch** — drive traffic through the proxy two ways:
+
+- **Manual browser** — visit any example site (e.g. `https://example.com`) in the browser
+  you configured in step 4.
+- **curl** — quick one-off requests: `curl -x http://<VM_PUBLIC_IP>:8080 -k https://example.com`.
+- **Playwright crawl (automated browser)** — reproduce a real browser's asset cascade
+  without clicking around:
+
+  ```bash
+  pip install playwright && playwright install chromium   # once, incl. system deps
+  python live_crawl.py --proxy <VM_PUBLIC_IP>:8080 \
+      --sites https://example.com https://httpbin.org/html
+  ```
+
+  `live_crawl.py` launches a headless Chromium through the proxy, waits for each page's
+  network to go quiet, and clicks the first internal link to crawl one level deeper.
+
+Every HTML, CSS, JS, image, font, and JSON object is listed live with its size as the
+page loads:
 
 ```
 [OBJECT #  1] HTML   |      559 B | text/html                | https://example.com/
