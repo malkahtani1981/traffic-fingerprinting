@@ -56,4 +56,3 @@ class AdvancedAcademicSuite:
                 y.append(label_idx)
         self.clf.fit(np.array(X), np.array(y))
         print("[Academic Model] Machine Learning thresholds locked onto crawler metrics.")
-</content>
