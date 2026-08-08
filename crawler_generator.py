@@ -71,4 +71,3 @@ if __name__ == "__main__":
     for round_num in range(1, 4):  # 3 baseline runs per site variation
         for label, target_url in TARGET_SITES.items():
             capture_crawled_session(label, target_url, round_num)
-</content>
