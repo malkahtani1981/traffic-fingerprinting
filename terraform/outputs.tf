@@ -27,4 +27,3 @@ output "ansible_inventory_line" {
     var.admin_username,
   )
 }
-</content>
