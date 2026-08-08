@@ -116,6 +116,68 @@ python academic_suite.py
 | `train_collector.sh` | curl-based session generator (10 runs × 3 sites) |
 | `crawler_generator.py` | Playwright crawler-based session generator |
 | `run_pipeline.py` | End-to-end training + evaluation wrapper |
+| `live_inspect.py` | Live mitmproxy addon: prints each identified object (type/size/URL) in real time |
+
+## Live experiment — use a VM as your browser proxy
+
+Run the proxy on a VM, point your browser at it, and watch objects get identified in
+real time as you browse. Provision the VM with the Terraform + Ansible in this repo (a
+cloud VM is required — you need a public IP that accepts proxy connections).
+
+**1. Create the VM and install the tools**
+
+```bash
+cd terraform && terraform init
+terraform apply -var="cloud_provider=aws"        # or gcp | azure | do
+# copy the printed ansible_inventory_line into ../ansible/inventory.ini
+cd ../ansible && ansible-playbook -i inventory.ini playbook.yml
+```
+
+**2. Open the proxy port** — in your cloud firewall / security group, allow inbound TCP
+`8080` from **your IP only**. Never leave it open to the world.
+
+**3. Start the live inspector on the VM**
+
+```bash
+ssh ubuntu@<VM_PUBLIC_IP>
+cd /opt/traffic-fingerprinting && source .venv/bin/activate
+mitmdump -s live_inspect.py --listen-mode regular --listen-host 0.0.0.0 --listen-port 8080
+```
+
+It prints each identified object and appends rows to `identified_objects.csv`.
+
+**4. Point your browser at the VM** — set the HTTP/HTTPS proxy to `<VM_PUBLIC_IP>:8080`
+(Firefox: Settings → Network Settings → Manual proxy; enable "Also use this proxy for
+HTTPS"). Firefox is easiest since its proxy is independent of the OS.
+
+**5. Trust the mitmproxy certificate** (required to see HTTPS objects) — with the proxy
+active, visit **http://mitm.it**, download the cert for your OS, and install it as a
+trusted authority. Without it, HTTPS sites show cert errors and you only see `CONNECT`
+metadata, not object types.
+
+**6. Browse and watch** — visit any example site (e.g. `https://example.com`). Every
+HTML, CSS, JS, image, font, and JSON object is listed live with its size as the page
+loads:
+
+```
+[OBJECT #  1] HTML   |      559 B | text/html                | https://example.com/
+[OBJECT #  4] IMAGE  |     8090 B | image/png                | https://.../image/png
+[OBJECT #  6] JSON   |      429 B | application/json         | https://.../json
+[OBJECT #  7] JS     |    87533 B | application/javascript   | https://.../jquery.min.js
+```
+
+**7. Turn a capture into a fingerprint**
+
+```bash
+mitmdump -w mysite.mitm --listen-host 0.0.0.0 --listen-port 8080
+python3 -c "from advanced_industry_suite import AdvancedIndustrySuite as S; s=S(); print(s.extract_object_chain('mysite.mitm'))"
+```
+
+When finished: unset the browser proxy, remove the mitmproxy cert, and
+`terraform destroy` the VM.
+
+> **Note:** this must run on a real VM with a public IP. A path-based app proxy (such as a
+> Replit preview) cannot forward the raw HTTP-proxy/CONNECT tunnel a browser needs.
 
 ## Notes on crawler operation
 
