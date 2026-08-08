@@ -51,4 +51,3 @@ do
 done
 
 echo "[System] Data gathering complete. Files are saved in dataset/training/"
-</content>
