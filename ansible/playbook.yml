@@ -95,4 +95,3 @@
         msg: >-
           traffic-fingerprinting ready at {{ project_dir }}.
           Activate with: source {{ project_dir }}/.venv/bin/activate
-</content>
