@@ -88,4 +88,3 @@ if __name__ == "__main__":
     # suite_v2.train_academic_model(training_data_map)
 
     print("[System] Academic Suite initialized using Machine Learning feature scaling arrays.")
-</content>
