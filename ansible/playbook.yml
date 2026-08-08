@@ -1,0 +1,98 @@
+---
+# Ansible playbook: provision a fresh VM with everything the
+# traffic-fingerprinting suite needs (mitmproxy, Python ML stack, Playwright/Chromium).
+#
+# Usage:
+#   ansible-playbook -i inventory.ini playbook.yml
+#
+# Targets Debian/Ubuntu and RHEL/Fedora families.
+- name: Provision traffic-fingerprinting toolchain
+  hosts: fingerprint_nodes
+  become: true
+
+  vars:
+    project_repo: "https://github.com/malkahtani1981/traffic-fingerprinting.git"
+    project_dir: "/opt/traffic-fingerprinting"
+    python_packages:
+      - mitmproxy
+      - scikit-learn
+      - numpy
+      - playwright
+
+  tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Install base packages (Debian/Ubuntu)
+      ansible.builtin.apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - git
+          - curl
+          - ca-certificates
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install base packages (RHEL/Fedora)
+      ansible.builtin.dnf:
+        name:
+          - python3
+          - python3-pip
+          - git
+          - curl
+          - ca-certificates
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Clone the traffic-fingerprinting repository
+      ansible.builtin.git:
+        repo: "{{ project_repo }}"
+        dest: "{{ project_dir }}"
+        version: main
+        update: true
+
+    - name: Create a Python virtual environment
+      ansible.builtin.command:
+        cmd: python3 -m venv "{{ project_dir }}/.venv"
+        creates: "{{ project_dir }}/.venv"
+
+    - name: Upgrade pip inside the virtualenv
+      ansible.builtin.pip:
+        name: pip
+        state: latest
+        virtualenv: "{{ project_dir }}/.venv"
+
+    - name: Install Python dependencies from requirements.txt
+      ansible.builtin.pip:
+        requirements: "{{ project_dir }}/requirements.txt"
+        virtualenv: "{{ project_dir }}/.venv"
+
+    - name: Ensure ML/proxy packages are present (explicit)
+      ansible.builtin.pip:
+        name: "{{ python_packages }}"
+        virtualenv: "{{ project_dir }}/.venv"
+
+    - name: Install Playwright system dependencies
+      ansible.builtin.command:
+        cmd: "{{ project_dir }}/.venv/bin/playwright install-deps"
+      register: pw_deps
+      changed_when: "'is already' not in pw_deps.stdout"
+      failed_when: false
+
+    - name: Install Playwright Chromium browser
+      ansible.builtin.command:
+        cmd: "{{ project_dir }}/.venv/bin/playwright install chromium"
+      register: pw_chromium
+      changed_when: "'is already installed' not in pw_chromium.stdout"
+
+    - name: Report installed toolchain
+      ansible.builtin.debug:
+        msg: >-
+          traffic-fingerprinting ready at {{ project_dir }}.
+          Activate with: source {{ project_dir }}/.venv/bin/activate
+</content>
