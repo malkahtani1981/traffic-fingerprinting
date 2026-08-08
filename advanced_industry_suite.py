@@ -38,4 +38,3 @@ class AdvancedIndustrySuite:
         sig = self.extract_object_chain(file_path)
         match = self.signature_db.get(sig, "UNKNOWN TRAFFIC PROFILE")
         print(f"[Industry Result] Analysis: {match}")
-</content>
