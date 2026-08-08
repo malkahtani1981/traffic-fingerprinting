@@ -84,4 +84,3 @@ variable "do_size" {
   type    = string
   default = "s-1vcpu-2gb"
 }
-</content>
