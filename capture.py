@@ -18,4 +18,3 @@ def response(flow):
     # Save the size profile straight to a CSV for your dataset
     with open("proxy_fingerprints.csv", "a") as f:
         f.write(f"{url},{request_size},{response_size},{time.time()}\n")
-</content>
