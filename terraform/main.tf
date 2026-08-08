@@ -164,4 +164,3 @@ resource "digitalocean_droplet" "vm" {
   size   = var.do_size
   image  = "ubuntu-22-04-x64"
 }
-</content>
